@@ -1,0 +1,46 @@
+// ==========================================
+// joystick.js
+// ==========================================
+const joyBase = document.getElementById('joystick-base');
+const joyKnob = document.getElementById('joystick-knob');
+const joyOutput = document.getElementById('joystick-output');
+let isJoyDragging = false;
+
+function joyStart(e) {
+    if (currentMode !== "JOYSTICK") return;
+    isJoyDragging = true;
+    joyKnob.style.transition = "none"; 
+    joyMove(e);
+}
+
+function joyEnd() {
+    if (!isJoyDragging) return;
+    isJoyDragging = false;
+    joyKnob.style.transition = "transform 0.2s ease-out"; 
+    joyKnob.style.transform = `translate(0px, 0px)`; 
+    joyOutput.textContent = `X: 0 | Y: 0`;
+}
+
+function joyMove(e) {
+    if (!isJoyDragging || currentMode !== "JOYSTICK") return;
+    let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const rect = joyBase.getBoundingClientRect();
+    let deltaX = clientX - (rect.left + rect.width / 2);
+    let deltaY = clientY - (rect.top + rect.height / 2);
+    const max = (rect.width / 2) - (joyKnob.offsetWidth / 2);
+    
+    if (Math.sqrt(deltaX*deltaX + deltaY*deltaY) > max) {
+        const angle = Math.atan2(deltaY, deltaX);
+        deltaX = Math.cos(angle) * max; deltaY = Math.sin(angle) * max;
+    }
+    joyKnob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+    joyOutput.textContent = `X: ${Math.round((deltaX/max)*100)} | Y: ${Math.round((deltaY/max)*-100)}`;
+}
+
+joyBase.addEventListener('mousedown', joyStart);
+window.addEventListener('mousemove', joyMove);
+window.addEventListener('mouseup', joyEnd);
+joyBase.addEventListener('touchstart', (e) => { e.preventDefault(); joyStart(e); }, { passive: false });
+window.addEventListener('touchmove', (e) => { if(isJoyDragging){e.preventDefault(); joyMove(e);} }, { passive: false });
+window.addEventListener('touchend', joyEnd);

@@ -3,22 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AeroBalance | Interactive Liquid Glass</title>
+    <title>AeroBalance | Modular Control System</title>
     <style>
+        /* --- ALL PREVIOUS CSS REMAINS EXACTLY THE SAME --- */
         :root {
-            /* --- LIQUID GLASS SETTINGS --- */
             --glass-bg: rgba(255, 255, 255, 0.05); 
             --glass-blur: blur(700px);              
-            
-            /* Edge lighting */
             --glass-border-top: rgba(255, 255, 255, 0.3); 
             --glass-border-left: rgba(255, 255, 255, 0.2);
             --glass-border-right: rgba(255, 255, 255, 0.05);
             --glass-border-bottom: rgba(255, 255, 255, 0.05);
-            
             --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); 
-            
-            /* UI Colors */
             --text-main: #ffffff;
             --text-dim: rgba(255, 255, 255, 0.6);
             --accent-green: #2ecc71;
@@ -26,205 +21,101 @@
             --btn-glass: rgba(255, 255, 255, 0.05);
             --btn-hover: rgba(255, 255, 255, 0.15);
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            text-transform: uppercase;
-        }
-
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            background-color: #080c17; 
-            overflow: hidden; 
-            position: relative;
-        }
-
-        /* --- BACKGROUND GLOWING ORBS --- */
-        .orb {
-            position: absolute;
-            top: 0; 
-            left: 0;
-            border-radius: 50%;
-            filter: blur(90px); 
-            z-index: -1;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; }
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; background-color: #080c17; overflow: hidden; position: relative; }
+        
+        .orb { position: absolute; top: 0; left: 0; border-radius: 50%; filter: blur(90px); z-index: -1; }
         .orb-1 { width: 450px; height: 450px; background-color: #0fb9b1; } 
         .orb-2 { width: 600px; height: 600px; background-color: #4b6584; } 
         .orb-3 { width: 350px; height: 350px; background-color: #2bcbba; opacity: 0.6; } 
 
-        /* --- THE MAIN LIQUID GLASS PANEL --- */
-        .panel-container {
-            width: 100%;
-            max-width: 900px; 
-            height: 500px; 
-            
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur); 
-            
-            border-top: 1px solid var(--glass-border-top);
-            border-left: 1px solid var(--glass-border-left);
-            border-right: 1px solid var(--glass-border-right);
-            border-bottom: 1px solid var(--glass-border-bottom);
-            
-            border-radius: 24px;
-            box-shadow: var(--glass-shadow);
-            
-            display: flex;
-            flex-direction: column;
-            z-index: 1; 
-        }
-
-        /* --- UI COMPONENTS --- */
-        .button-bar {
-            padding: 25px;
-            display: flex;
-            justify-content: space-between; 
-            align-items: flex-start;
-            flex-wrap: wrap; 
-        }
-
-        .button {
-            display: flex;
-            flex-direction: column; 
-            justify-content: center;
-            align-items: center;
-            
-            background: var(--btn-glass);
-            border-top: 1px solid rgba(255,255,255,0.4);
-            border-left: 1px solid rgba(255,255,255,0.2);
-            border-bottom: 1px solid transparent;
-            border-right: 1px solid transparent;
-            backdrop-filter: blur(4px);
-            
-            color: var(--text-main);
-            border-radius: 12px; 
-            padding: 10px 15px;
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
-            width: 130px; 
-            height: 60px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: all 0.3s ease; 
-            cursor: pointer;
-            margin-bottom: 10px; 
-        }
-
+        .panel-container { width: 100%; max-width: 900px; height: 500px; background: var(--glass-bg); backdrop-filter: var(--glass-blur); border-top: 1px solid var(--glass-border-top); border-left: 1px solid var(--glass-border-left); border-right: 1px solid var(--glass-border-right); border-bottom: 1px solid var(--glass-border-bottom); border-radius: 24px; box-shadow: var(--glass-shadow); display: flex; flex-direction: column; z-index: 1; }
+        .button-bar { padding: 25px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }
+        .button { display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--btn-glass); border-top: 1px solid rgba(255,255,255,0.4); border-left: 1px solid rgba(255,255,255,0.2); border-bottom: 1px solid transparent; border-right: 1px solid transparent; backdrop-filter: blur(4px); color: var(--text-main); border-radius: 12px; padding: 10px 15px; font-size: 14px; font-weight: bold; width: 130px; height: 60px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
         .button span { display: block; width: 100%; text-align: center; }
         .button-large-text { font-size: 16px; }
-        .button-two-line { display: block; height: 80px; line-height: 1.3; }
+        .button-two-line { height: 80px; line-height: 1.3; }
+        .button:hover { background: var(--btn-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .button.active { background: rgba(46, 204, 113, 0.2); border: 1px solid var(--accent-green); box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); color: var(--accent-green); text-shadow: 0 0 8px rgba(46, 204, 113, 0.5); }
+        
+        .status-bar { display: flex; align-items: center; background: rgba(0,0,0,0.15); border-top: 1px solid rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px 25px; height: 60px; color: var(--text-main); font-size: 14px; font-weight: 600; }
+        .status-box { border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; display: flex; justify-content: center; align-items: center; margin-right: 15px; padding: 0 15px; height: 36px; background: rgba(255,255,255,0.05); }
+        .connected-box { width: 140px; color: var(--accent-green); text-shadow: 0 0 10px rgba(46, 204, 113, 0.5); border-color: rgba(46, 204, 113, 0.4); background: rgba(46, 204, 113, 0.05); }
+        .combined-strength-box { position: relative; width: 250px; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; height: 36px; background: rgba(0,0,0,0.1); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .signal-bar-bg { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: rgba(46, 204, 113, 0.6); box-shadow: 0 0 15px var(--accent-glow); transition: 1.5s ease; z-index: 0; }
+        .signal-text { position: relative; z-index: 1; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
 
-        .button:hover {
-            background: var(--btn-hover);
-            transform: translateY(-2px); 
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); 
-            border-top: 1px solid rgba(255,255,255,0.6);
+        .main-display { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; color: var(--text-dim); font-size: 22px; text-transform: none; letter-spacing: 3px; text-align: center; }
+
+        /* --- CONTROL ZONES (Hidden by default) --- */
+        .control-zone { display: none; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
+        .output-text { font-family: monospace; font-size: 20px; color: var(--accent-green); background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* Joystick */
+        #joystick-base { width: 160px; height: 160px; border-radius: 50%; background: rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.2); position: relative; touch-action: none; }
+        #joystick-knob { width: 60px; height: 60px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 20px var(--accent-glow); position: absolute; top: 50%; left: 50%; margin: -30px 0 0 -30px; cursor: grab; }
+        
+        /* Arrows */
+        .arrow-grid { display: grid; grid-template-columns: 60px 60px 60px; gap: 10px; }
+        .arr-btn { width: 60px; height: 60px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; color: white; font-size: 24px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .arr-btn:active { background: var(--accent-green); box-shadow: 0 0 15px var(--accent-glow); }
+        #btn-up { grid-column: 2; grid-row: 1; }
+        #btn-left { grid-column: 1; grid-row: 2; }
+        #btn-down { grid-column: 2; grid-row: 2; }
+        #btn-right { grid-column: 3; grid-row: 2; }
+
+        /* --- Sliders (Vertical Forward/Backward) --- */
+        .slider-container { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 20px; 
+            height: 250px; 
+            justify-content: center;
         }
-
-        .button.active {
-            background: rgba(46, 204, 113, 0.2); 
-            border: 1px solid var(--accent-green);
-            box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
-            color: var(--accent-green);
-            text-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
-        }
-
-        .status-bar {
-            display: flex;
-            justify-content: flex-start; 
-            align-items: center;
-            background: rgba(0, 0, 0, 0.15);
-            border-top: 1px solid rgba(0, 0, 0, 0.2);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
-            padding: 10px 25px;
-            height: 60px;
+        .slider-label {
+            font-weight: bold;
             color: var(--text-main);
+            letter-spacing: 2px;
             font-size: 14px;
-            font-weight: 600;
         }
-
-        .status-box {
-            border: 1px solid rgba(255, 255, 255, 0.2); 
-            border-radius: 6px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 15px; 
-            padding: 0 15px;
-            height: 36px;
-            background: rgba(255, 255, 255, 0.05); 
-        }
-
-        .connected-box {
-            width: 140px; 
-            color: var(--accent-green); 
-            text-shadow: 0 0 10px rgba(46, 204, 113, 0.5); 
-            border-color: rgba(46, 204, 113, 0.4); 
-            background: rgba(46, 204, 113, 0.05);
-        }
-
-        /* --- NEW: Combined Signal Strength Bar --- */
-        .combined-strength-box {
-            position: relative; /* Allows absolute positioning inside it */
-            width: 250px; 
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            height: 36px;
-            background: rgba(0,0,0,0.1); 
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden; /* Keeps the green fill inside the rounded corners */
-        }
-
-        /* The green fill that animates */
-        .signal-bar-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 0%; /* JS will animate this to 85% */
-            background: rgba(46, 204, 113, 0.6); /* Slightly transparent green */
-            box-shadow: 0 0 15px var(--accent-glow);
-            transition: width 1.5s ease-in-out;
-            z-index: 0; /* Keeps it behind the text */
-        }
-
-        /* The text that sits on top of the fill */
-        .signal-text {
+        .slider-wrapper {
+            height: 160px; /* How tall the slider is on screen */
+            width: 40px;
             position: relative;
-            z-index: 1; /* Keeps it above the green bar */
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8); /* Ensures text is readable over the green */
-            letter-spacing: 1px;
-        }
-
-        .main-display {
-            flex-grow: 1; 
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
-            color: var(--text-dim);
-            font-size: 22px;
-            text-transform: none; 
-            letter-spacing: 3px;
-            text-align: center;
+        }
+        /* We rotate a horizontal slider -90deg to make it vertical! */
+        .vertical-slider { 
+            -webkit-appearance: none; 
+            width: 160px; /* This becomes the height due to rotation */
+            height: 10px; 
+            background: rgba(0,0,0,0.4); 
+            border-radius: 5px; 
+            border: 1px solid rgba(255,255,255,0.2); 
+            outline: none;
+            transform: rotate(-90deg);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .vertical-slider::-webkit-slider-thumb { 
+            -webkit-appearance: none; 
+            height: 36px; 
+            width: 36px; 
+            border-radius: 50%; 
+            background: var(--accent-green); 
+            cursor: grab; 
+            box-shadow: 0 0 15px var(--accent-glow), inset 0 0 5px rgba(255,255,255,0.5); 
+        }
+        .vertical-slider::-webkit-slider-thumb:active {
+            cursor: grabbing;
         }
 
-        .main-display h3 {
-            transition: color 0.3s ease;
-        }
+        /* Gyro Visual */
+        #gyro-bubble-base { width: 150px; height: 150px; border-radius: 50%; border: 2px dashed rgba(255,255,255,0.3); position: relative; }
+        #gyro-bubble { width: 20px; height: 20px; border-radius: 50%; background: var(--accent-green); position: absolute; top: 50%; left: 50%; margin: -10px; box-shadow: 0 0 15px var(--accent-glow); transition: 0.1s linear; }
+
     </style>
 </head>
 <body>
@@ -245,141 +136,60 @@
 
         <div class="status-bar">
             <div class="status-box connected-box">CONNECTED</div>
-            
             <div class="combined-strength-box">
                 <div class="signal-bar-bg" id="signal-fill"></div>
                 <span class="signal-text">SIGNAL STRENGTH</span>
             </div> 
-
         </div>
 
         <div class="main-display">
             <h3 id="display-text">(SYSTEM STANDBY)</h3>
+
+            <div id="joystick-zone" class="control-zone">
+                <div id="joystick-base"><div id="joystick-knob"></div></div>
+                <div id="joystick-output" class="output-text">X: 0 | Y: 0</div>
+            </div>
+
+            <div id="arrow-zone" class="control-zone">
+                <div class="arrow-grid">
+                    <div class="arr-btn" id="btn-up">▲</div>
+                    <div class="arr-btn" id="btn-left">◀</div>
+                    <div class="arr-btn" id="btn-down">▼</div>
+                    <div class="arr-btn" id="btn-right">▶</div>
+                </div>
+                <div id="arrow-output" class="output-text">X: 0 | Y: 0</div>
+            </div>
+
+           <div id="slider-zone" class="control-zone">
+                <div class="slider-container">
+                    <span class="slider-label">▲ FORWARD ▲</span>
+                    
+                    <div class="slider-wrapper">
+                        <input type="range" id="speed-slider" class="vertical-slider" min="-100" max="100" value="0">
+                    </div>
+                    
+                    <span class="slider-label">▼ BACKWARD ▼</span>
+                </div>
+                <div id="slider-output" class="output-text">SPEED: 0%</div>
+            </div>
+
+            <div id="gyro-zone" class="control-zone">
+                <div id="gyro-bubble-base"><div id="gyro-bubble"></div></div>
+                <div id="gyro-output" class="output-text">X: 0 | Y: 0</div>
+            </div>
+
+            <div id="auto-zone" class="control-zone">
+                <h2 style="color: var(--accent-green); text-shadow: 0 0 10px var(--accent-glow);">[ SCANNING ENVIRONMENT ]</h2>
+                <div id="auto-output" class="output-text">AI CONTROL ENGAGED</div>
+            </div>
+
         </div>
     </div>
 
-    <script>
-        // --- 1. LIGHT ENGINE & GYROSCOPE ---
-        const orbs = [
-            { el: document.querySelector('.orb-1'), x: 0, y: 0, speed: 0.02, offsetX: 0, offsetY: 0 },
-            { el: document.querySelector('.orb-2'), x: 0, y: 0, speed: 0.015, offsetX: 300, offsetY: -200 },
-            { el: document.querySelector('.orb-3'), x: 0, y: 0, speed: 0.035, offsetX: -250, offsetY: 150 }
-        ];
+    <script src="lights.js"></script>    <script src="ui.js"></script>        <script src="joystick.js"></script>  <script src="arrows.js"></script>
+    <script src="slider.js"></script>
+    <script src="gyroscope.js"></script>
+    <script src="auto.js"></script>
 
-        let targetX = window.innerWidth / 2;
-        let targetY = window.innerHeight / 2;
-
-        window.addEventListener('mousemove', (e) => {
-            targetX = e.clientX;
-            targetY = e.clientY;
-        });
-
-        window.addEventListener('deviceorientation', (e) => {
-            let tiltX = e.gamma; 
-            let tiltY = e.beta;  
-            if (tiltX !== null && tiltY !== null) {
-                let constrainedX = Math.max(-45, Math.min(45, tiltX));
-                let constrainedY = Math.max(0, Math.min(90, tiltY)) - 45; 
-                targetX = (window.innerWidth / 2) + (constrainedX / 45) * (window.innerWidth / 2);
-                targetY = (window.innerHeight / 2) + (constrainedY / 45) * (window.innerHeight / 2);
-            }
-        });
-
-        function animate() {
-            orbs.forEach(orb => {
-                let orbTargetX = targetX + orb.offsetX;
-                let orbTargetY = targetY + orb.offsetY;
-                orb.x += (orbTargetX - orb.x) * orb.speed;
-                orb.y += (orbTargetY - orb.y) * orb.speed;
-                orb.el.style.transform = `translate(calc(${orb.x}px - 50%), calc(${orb.y}px - 50%))`;
-            });
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        // --- 2. UI LOGIC ENGINE ---
-        const btnBalance = document.getElementById('btn-balance');
-        const btnAuto = document.getElementById('btn-auto');
-        const modeButtons = document.querySelectorAll('.mode-btn');
-        const displayText = document.getElementById('display-text');
-        const signalFill = document.getElementById('signal-fill');
-
-        let isSystemOn = false;
-        let isAutoDriving = false;
-        let currentMode = null;
-
-        function updateDisplay() {
-            if (!isSystemOn) {
-                displayText.textContent = "(SYSTEM STANDBY)";
-                displayText.style.color = "rgba(255, 255, 255, 0.6)"; 
-                return;
-            }
-
-            displayText.style.color = "#2ecc71"; 
-            
-            if (isAutoDriving) {
-                displayText.textContent = ">>> AUTOPILOT ENGAGED <<<";
-            } else if (currentMode) {
-                displayText.textContent = `SYSTEM ACTIVE: [ ${currentMode} MODE ]`;
-            } else {
-                displayText.textContent = "SYSTEM ACTIVE: AWAITING INPUT MODE";
-            }
-        }
-
-        // Fills the combined signal bar after 1 second
-        setTimeout(() => {
-            signalFill.style.width = "85%"; 
-        }, 1000);
-
-        btnBalance.addEventListener('click', () => {
-            isSystemOn = !isSystemOn; 
-            btnBalance.classList.toggle('active'); 
-            
-            if (!isSystemOn) {
-                isAutoDriving = false;
-                btnAuto.classList.remove('active');
-                currentMode = null;
-                modeButtons.forEach(btn => btn.classList.remove('active'));
-            }
-            updateDisplay();
-        });
-
-        btnAuto.addEventListener('click', () => {
-            if (!isSystemOn) {
-                alert("Please turn Balance ON first.");
-                return; 
-            }
-            
-            isAutoDriving = !isAutoDriving;
-            btnAuto.classList.toggle('active');
-
-            if (isAutoDriving) {
-                currentMode = null;
-                modeButtons.forEach(btn => btn.classList.remove('active'));
-            }
-            updateDisplay();
-        });
-
-        modeButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                if (!isSystemOn) {
-                    alert("Please turn Balance ON first.");
-                    return;
-                }
-
-                if (isAutoDriving) {
-                    isAutoDriving = false;
-                    btnAuto.classList.remove('active');
-                }
-
-                modeButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                currentMode = button.getAttribute('data-mode'); 
-                
-                updateDisplay();
-            });
-        });
-
-    </script>
 </body>
 </html>
