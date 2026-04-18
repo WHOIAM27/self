@@ -6,9 +6,9 @@
     <title>AeroBalance | Interactive Liquid Glass</title>
     <style>
         :root {
-            /* Liquid Glass Variables - Updated per your request */
+            /* --- LIQUID GLASS SETTINGS --- */
             --glass-bg: rgba(255, 255, 255, 0.05); 
-            --glass-blur: blur(700px); 
+            --glass-blur: blur(700px);              
             
             /* Edge lighting */
             --glass-border-top: rgba(255, 255, 255, 0.3); 
@@ -18,10 +18,11 @@
             
             --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); 
             
-            /* Colors */
+            /* UI Colors */
             --text-main: #ffffff;
             --text-dim: rgba(255, 255, 255, 0.6);
             --accent-green: #2ecc71;
+            --accent-glow: rgba(46, 204, 113, 0.8);
             --btn-glass: rgba(255, 255, 255, 0.05);
             --btn-hover: rgba(255, 255, 255, 0.15);
         }
@@ -55,11 +56,11 @@
             z-index: -1;
         }
 
-        .orb-1 { width: 450px; height: 450px; background-color: #0fb9b1; }
-        .orb-2 { width: 600px; height: 600px; background-color: #4b6584; }
-        .orb-3 { width: 350px; height: 350px; background-color: #2bcbba; opacity: 0.6; }
+        .orb-1 { width: 450px; height: 450px; background-color: #0fb9b1; } 
+        .orb-2 { width: 600px; height: 600px; background-color: #4b6584; } 
+        .orb-3 { width: 350px; height: 350px; background-color: #2bcbba; opacity: 0.6; } 
 
-        /* --- THE LIQUID GLASS PANEL --- */
+        /* --- THE MAIN LIQUID GLASS PANEL --- */
         .panel-container {
             width: 100%;
             max-width: 900px; 
@@ -82,6 +83,7 @@
             z-index: 1; 
         }
 
+        /* --- UI COMPONENTS --- */
         .button-bar {
             padding: 25px;
             display: flex;
@@ -95,12 +97,14 @@
             flex-direction: column; 
             justify-content: center;
             align-items: center;
+            
             background: var(--btn-glass);
             border-top: 1px solid rgba(255,255,255,0.4);
             border-left: 1px solid rgba(255,255,255,0.2);
             border-bottom: 1px solid transparent;
             border-right: 1px solid transparent;
             backdrop-filter: blur(4px);
+            
             color: var(--text-main);
             border-radius: 12px; 
             padding: 10px 15px;
@@ -124,6 +128,14 @@
             transform: translateY(-2px); 
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); 
             border-top: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .button.active {
+            background: rgba(46, 204, 113, 0.2); 
+            border: 1px solid var(--accent-green);
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+            color: var(--accent-green);
+            text-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
         }
 
         .status-bar {
@@ -161,15 +173,40 @@
             background: rgba(46, 204, 113, 0.05);
         }
 
-        .strength-box { width: 110px; }
-        
-        .strength-meter-box {
-            width: 160px; 
+        /* --- NEW: Combined Signal Strength Bar --- */
+        .combined-strength-box {
+            position: relative; /* Allows absolute positioning inside it */
+            width: 250px; 
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 6px;
             height: 36px;
             background: rgba(0,0,0,0.1); 
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Keeps the green fill inside the rounded corners */
+        }
+
+        /* The green fill that animates */
+        .signal-bar-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%; /* JS will animate this to 85% */
+            background: rgba(46, 204, 113, 0.6); /* Slightly transparent green */
+            box-shadow: 0 0 15px var(--accent-glow);
+            transition: width 1.5s ease-in-out;
+            z-index: 0; /* Keeps it behind the text */
+        }
+
+        /* The text that sits on top of the fill */
+        .signal-text {
+            position: relative;
+            z-index: 1; /* Keeps it above the green bar */
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8); /* Ensures text is readable over the green */
+            letter-spacing: 1px;
         }
 
         .main-display {
@@ -182,6 +219,11 @@
             font-size: 22px;
             text-transform: none; 
             letter-spacing: 3px;
+            text-align: center;
+        }
+
+        .main-display h3 {
+            transition: color 0.3s ease;
         }
     </style>
 </head>
@@ -193,76 +235,151 @@
 
     <div class="panel-container">
         <div class="button-bar">
-            <div class="button button-large-text button-two-line"><span>BALANCE ON</span><span>/ OFF</span></div>
-            <div class="button">JOYSTICK</div>
-            <div class="button">GYROSCOPE</div>
-            <div class="button">ARROW BUTTON</div>
-            <div class="button">STEERING SLIDER</div>
-            <div class="button button-large-text button-two-line"><span>AUTOMATIC</span><span>/ SELF DRIVING</span></div>
+            <div class="button button-large-text button-two-line" id="btn-balance"><span>BALANCE ON</span><span>/ OFF</span></div>
+            <div class="button mode-btn" data-mode="JOYSTICK">JOYSTICK</div>
+            <div class="button mode-btn" data-mode="GYROSCOPE">GYROSCOPE</div>
+            <div class="button mode-btn" data-mode="ARROW BUTTON">ARROW BUTTON</div>
+            <div class="button mode-btn" data-mode="STEERING SLIDER">STEERING SLIDER</div>
+            <div class="button button-large-text button-two-line" id="btn-auto"><span>AUTOMATIC</span><span>/ SELF DRIVING</span></div>
         </div>
 
         <div class="status-bar">
             <div class="status-box connected-box">CONNECTED</div>
-            <div class="status-box strength-box">SIGNAL STRENGTH</div>
-            <div class="strength-meter-box"></div> 
+            
+            <div class="combined-strength-box">
+                <div class="signal-bar-bg" id="signal-fill"></div>
+                <span class="signal-text">SIGNAL STRENGTH</span>
+            </div> 
+
         </div>
 
         <div class="main-display">
-            <h3>(SYSTEM STANDBY)</h3>
+            <h3 id="display-text">(SYSTEM STANDBY)</h3>
         </div>
     </div>
 
     <script>
+        // --- 1. LIGHT ENGINE & GYROSCOPE ---
         const orbs = [
             { el: document.querySelector('.orb-1'), x: 0, y: 0, speed: 0.02, offsetX: 0, offsetY: 0 },
             { el: document.querySelector('.orb-2'), x: 0, y: 0, speed: 0.015, offsetX: 300, offsetY: -200 },
             { el: document.querySelector('.orb-3'), x: 0, y: 0, speed: 0.035, offsetX: -250, offsetY: 150 }
         ];
 
-        let mouseX = window.innerWidth / 2;
-        let mouseY = window.innerHeight / 2;
+        let targetX = window.innerWidth / 2;
+        let targetY = window.innerHeight / 2;
 
-        // 1. Desktop: Listen for mouse movement
         window.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
+            targetX = e.clientX;
+            targetY = e.clientY;
         });
 
-        // 2. Mobile: Listen for device tilt (gyroscope/accelerometer)
         window.addEventListener('deviceorientation', (e) => {
-            // e.gamma represents left-to-right tilt in degrees
-            // e.beta represents front-to-back tilt in degrees
             let tiltX = e.gamma; 
-            let tiltY = e.beta;
-
+            let tiltY = e.beta;  
             if (tiltX !== null && tiltY !== null) {
-                // Constrain the tilt from -45 to 45 degrees so you don't have to flip your phone upside down
                 let constrainedX = Math.max(-45, Math.min(45, tiltX));
-                // Beta usually rests at 45 degrees when holding a phone normally, so we adjust for that
                 let constrainedY = Math.max(0, Math.min(90, tiltY)) - 45; 
-
-                // Map the -45 to 45 degree tilt to the width/height of the screen
-                mouseX = (window.innerWidth / 2) + (constrainedX / 45) * (window.innerWidth / 2);
-                mouseY = (window.innerHeight / 2) + (constrainedY / 45) * (window.innerHeight / 2);
+                targetX = (window.innerWidth / 2) + (constrainedX / 45) * (window.innerWidth / 2);
+                targetY = (window.innerHeight / 2) + (constrainedY / 45) * (window.innerHeight / 2);
             }
         });
 
-        // Animation Loop
         function animate() {
             orbs.forEach(orb => {
-                let targetX = mouseX + orb.offsetX;
-                let targetY = mouseY + orb.offsetY;
-
-                orb.x += (targetX - orb.x) * orb.speed;
-                orb.y += (targetY - orb.y) * orb.speed;
-
+                let orbTargetX = targetX + orb.offsetX;
+                let orbTargetY = targetY + orb.offsetY;
+                orb.x += (orbTargetX - orb.x) * orb.speed;
+                orb.y += (orbTargetY - orb.y) * orb.speed;
                 orb.el.style.transform = `translate(calc(${orb.x}px - 50%), calc(${orb.y}px - 50%))`;
             });
-
             requestAnimationFrame(animate);
         }
-
         animate();
+
+        // --- 2. UI LOGIC ENGINE ---
+        const btnBalance = document.getElementById('btn-balance');
+        const btnAuto = document.getElementById('btn-auto');
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        const displayText = document.getElementById('display-text');
+        const signalFill = document.getElementById('signal-fill');
+
+        let isSystemOn = false;
+        let isAutoDriving = false;
+        let currentMode = null;
+
+        function updateDisplay() {
+            if (!isSystemOn) {
+                displayText.textContent = "(SYSTEM STANDBY)";
+                displayText.style.color = "rgba(255, 255, 255, 0.6)"; 
+                return;
+            }
+
+            displayText.style.color = "#2ecc71"; 
+            
+            if (isAutoDriving) {
+                displayText.textContent = ">>> AUTOPILOT ENGAGED <<<";
+            } else if (currentMode) {
+                displayText.textContent = `SYSTEM ACTIVE: [ ${currentMode} MODE ]`;
+            } else {
+                displayText.textContent = "SYSTEM ACTIVE: AWAITING INPUT MODE";
+            }
+        }
+
+        // Fills the combined signal bar after 1 second
+        setTimeout(() => {
+            signalFill.style.width = "85%"; 
+        }, 1000);
+
+        btnBalance.addEventListener('click', () => {
+            isSystemOn = !isSystemOn; 
+            btnBalance.classList.toggle('active'); 
+            
+            if (!isSystemOn) {
+                isAutoDriving = false;
+                btnAuto.classList.remove('active');
+                currentMode = null;
+                modeButtons.forEach(btn => btn.classList.remove('active'));
+            }
+            updateDisplay();
+        });
+
+        btnAuto.addEventListener('click', () => {
+            if (!isSystemOn) {
+                alert("Please turn Balance ON first.");
+                return; 
+            }
+            
+            isAutoDriving = !isAutoDriving;
+            btnAuto.classList.toggle('active');
+
+            if (isAutoDriving) {
+                currentMode = null;
+                modeButtons.forEach(btn => btn.classList.remove('active'));
+            }
+            updateDisplay();
+        });
+
+        modeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (!isSystemOn) {
+                    alert("Please turn Balance ON first.");
+                    return;
+                }
+
+                if (isAutoDriving) {
+                    isAutoDriving = false;
+                    btnAuto.classList.remove('active');
+                }
+
+                modeButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                currentMode = button.getAttribute('data-mode'); 
+                
+                updateDisplay();
+            });
+        });
+
     </script>
 </body>
 </html>
