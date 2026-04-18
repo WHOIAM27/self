@@ -1,0 +1,85 @@
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.05); 
+    --glass-blur: blur(700px);              
+    --glass-border-top: rgba(255, 255, 255, 0.3); 
+    --glass-border-left: rgba(255, 255, 255, 0.2);
+    --glass-border-right: rgba(255, 255, 255, 0.05);
+    --glass-border-bottom: rgba(255, 255, 255, 0.05);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); 
+    --text-main: #ffffff;
+    --text-dim: rgba(255, 255, 255, 0.6);
+    --accent-green: #2ecc71;
+    --accent-glow: rgba(46, 204, 113, 0.8);
+    --btn-glass: rgba(255, 255, 255, 0.05);
+    --btn-hover: rgba(255, 255, 255, 0.15);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; }
+body { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; background-color: #080c17; overflow: hidden; position: relative; }
+
+/* Background Lights */
+.orb { position: absolute; top: 0; left: 0; border-radius: 50%; filter: blur(90px); z-index: -1; }
+.orb-1 { width: 450px; height: 450px; background-color: #0fb9b1; } 
+.orb-2 { width: 600px; height: 600px; background-color: #4b6584; } 
+.orb-3 { width: 350px; height: 350px; background-color: #2bcbba; opacity: 0.6; } 
+
+/* Main Panel */
+.panel-container { width: 100%; max-width: 900px; height: 500px; background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-top: 1px solid var(--glass-border-top); border-left: 1px solid var(--glass-border-left); border-right: 1px solid var(--glass-border-right); border-bottom: 1px solid var(--glass-border-bottom); border-radius: 24px; box-shadow: var(--glass-shadow); display: flex; flex-direction: column; z-index: 1; }
+
+/* Buttons */
+.button-bar { padding: 25px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }
+.button { display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--btn-glass); border-top: 1px solid rgba(255,255,255,0.4); border-left: 1px solid rgba(255,255,255,0.2); border-bottom: 1px solid transparent; border-right: 1px solid transparent; backdrop-filter: blur(4px); color: var(--text-main); border-radius: 12px; padding: 10px 15px; font-size: 14px; font-weight: bold; width: 130px; height: 60px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
+.button span { display: block; width: 100%; text-align: center; }
+.button-large-text { font-size: 16px; }
+.button-two-line { height: 80px; line-height: 1.3; }
+.button:hover { background: var(--btn-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+.button.active { background: rgba(46, 204, 113, 0.2); border: 1px solid var(--accent-green); box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); color: var(--accent-green); text-shadow: 0 0 8px rgba(46, 204, 113, 0.5); }
+
+/* Status Bar */
+.status-bar { display: flex; align-items: center; background: rgba(0,0,0,0.15); border-top: 1px solid rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px 25px; height: 60px; color: var(--text-main); font-size: 14px; font-weight: 600; }
+.status-box { border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; display: flex; justify-content: center; align-items: center; margin-right: 15px; padding: 0 15px; height: 36px; background: rgba(255,255,255,0.05); }
+.connected-box { width: 140px; color: var(--accent-green); text-shadow: 0 0 10px rgba(46, 204, 113, 0.5); border-color: rgba(46, 204, 113, 0.4); background: rgba(46, 204, 113, 0.05); }
+.combined-strength-box { position: relative; width: 250px; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; height: 36px; background: rgba(0,0,0,0.1); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; overflow: hidden; }
+.signal-bar-bg { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: rgba(46, 204, 113, 0.6); box-shadow: 0 0 15px var(--accent-glow); transition: 1.5s ease; z-index: 0; }
+.signal-text { position: relative; z-index: 1; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+
+/* Display Zones */
+.main-display { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; color: var(--text-dim); font-size: 22px; text-transform: none; letter-spacing: 3px; text-align: center; }
+.control-zone { display: none; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
+.output-text { font-family: monospace; font-size: 20px; color: var(--accent-green); background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+
+/* 1. Joystick */
+#joystick-base { width: 160px; height: 160px; border-radius: 50%; background: rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.2); position: relative; touch-action: none; }
+#joystick-knob { width: 60px; height: 60px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 20px var(--accent-glow); position: absolute; top: 50%; left: 50%; margin: -30px 0 0 -30px; cursor: grab; }
+
+/* 2. Arrows */
+.arrow-grid { display: grid; grid-template-columns: 60px 60px 60px; gap: 10px; }
+.arr-btn { width: 60px; height: 60px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; color: white; font-size: 24px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+.arr-btn:active { background: var(--accent-green); box-shadow: 0 0 15px var(--accent-glow); }
+#btn-up { grid-column: 2; grid-row: 1; }
+#btn-left { grid-column: 1; grid-row: 2; }
+#btn-down { grid-column: 2; grid-row: 2; }
+#btn-right { grid-column: 3; grid-row: 2; }
+
+/* 3. Sliders & Boxes */
+.slider-layout { display: flex; align-items: center; justify-content: center; gap: 50px; width: 100%; height: 250px; }
+.speed-display { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.speed-label { font-size: 20px; color: var(--text-dim); margin-bottom: 5px; }
+.speed-value { font-family: monospace; font-size: 50px; font-weight: bold; color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.3); transition: color 0.2s ease; }
+
+.slider-wrapper { height: 200px; width: 40px; position: relative; display: flex; justify-content: center; align-items: center; }
+.vertical-slider { -webkit-appearance: none; width: 200px; height: 12px; background: rgba(0,0,0,0.6); border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); outline: none; transform: rotate(-90deg); box-shadow: inset 0 2px 5px rgba(0,0,0,0.8); }
+.vertical-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 40px; width: 40px; border-radius: 50%; background: var(--text-main); cursor: grab; box-shadow: 0 0 15px rgba(255,255,255,0.5), inset 0 0 5px rgba(0,0,0,0.5); transition: background 0.2s, box-shadow 0.2s; }
+.vertical-slider::-webkit-slider-thumb:active { cursor: grabbing; }
+
+.vertical-slider.thumb-forward::-webkit-slider-thumb { background: #2ecc71; box-shadow: 0 0 20px rgba(46, 204, 113, 0.8); }
+.vertical-slider.thumb-backward::-webkit-slider-thumb { background: #e74c3c; box-shadow: 0 0 20px rgba(231, 76, 60, 0.8); }
+
+.direction-display { display: flex; flex-direction: column; gap: 20px; }
+.dir-box { padding: 15px 25px; border: 2px solid rgba(255,255,255,0.2); border-radius: 12px; font-size: 22px; font-weight: bold; color: rgba(255,255,255,0.4); background: rgba(0,0,0,0.3); text-align: center; transition: all 0.2s ease; }
+.dir-box.active-forward { border-color: #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.1); box-shadow: 0 0 20px rgba(46, 204, 113, 0.4), inset 0 0 10px rgba(46, 204, 113, 0.2); text-shadow: 0 0 10px rgba(46, 204, 113, 0.8); }
+.dir-box.active-backward { border-color: #e74c3c; color: #e74c3c; background: rgba(231, 76, 60, 0.1); box-shadow: 0 0 20px rgba(231, 76, 60, 0.4), inset 0 0 10px rgba(231, 76, 60, 0.2); text-shadow: 0 0 10px rgba(231, 76, 60, 0.8); }
+
+/* 4. Gyroscope */
+#gyro-bubble-base { width: 150px; height: 150px; border-radius: 50%; border: 2px dashed rgba(255,255,255,0.3); position: relative; }
+#gyro-bubble { width: 20px; height: 20px; border-radius: 50%; background: var(--accent-green); position: absolute; top: 50%; left: 50%; margin: -10px; box-shadow: 0 0 15px var(--accent-glow); transition: 0.1s linear; }
