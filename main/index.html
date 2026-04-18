@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AeroBalance | Modular Control Center</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -24,7 +24,7 @@
         </div>
 
         <div class="status-bar">
-            <div class="status-box connected-box">CONNECTED</div>
+            <div class="status-box" id="btn-connect" style="cursor: pointer;">DISCONNECTED</div>
             <div class="combined-strength-box">
                 <div class="signal-bar-bg" id="signal-fill"></div>
                 <span class="signal-text">SIGNAL STRENGTH</span>
@@ -76,12 +76,31 @@
             </div>
 
         </div>
+
+        <div id="connection-overlay" style="display: none;">
+            <div class="connection-card">
+                <div class="conn-tabs">
+                    <div class="conn-tab active" id="tab-wifi">WI-FI</div>
+                    <div class="conn-tab" id="tab-ble">BLUETOOTH</div>
+                </div>
+                
+                <div id="content-wifi">
+                    <input type="text" id="esp-ip" placeholder="192.168.4.1">
+                    <button class="conn-btn" onclick="connectWifi()">CONNECT WI-FI</button>
+                </div>
+                
+                <div id="content-ble" style="display: none;">
+                    <button class="conn-btn" onclick="connectBLE()">PAIR DEVICE</button>
+                </div>
+
+                <p onclick="toggleOverlay()" style="margin-top: 15px; cursor: pointer; font-size: 11px; opacity: 0.5; font-weight: bold; letter-spacing: 1px;">CLOSE</p>
+            </div>
+        </div>
+
     </div>
 
-    
-
-    <script src="app.js"></script>
-    
+    <script src="network.js"></script>
+   <script src="app.js"></script>
     <script src="../controls/joystick.js"></script>
     <script src="../controls/arrows.js"></script>
     <script src="../controls/slider.js"></script>
