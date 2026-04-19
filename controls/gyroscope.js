@@ -17,6 +17,8 @@ function resetGyroCalibration() {
 
 let pendingCalibration = false;
 
+let forceBubbleCenterFrames = 0;
+
 window.addEventListener('deviceorientation', (e) => {
     if (currentMode !== "GYROSCOPE" || !isSystemOn) return;
 
@@ -24,7 +26,7 @@ window.addEventListener('deviceorientation', (e) => {
         gyroNeutral.gamma = e.gamma;
         gyroNeutral.beta = e.beta;
         pendingCalibration = false;
-        
+
         // Reset button UI after short delay
         if (gyroResetBtn) {
             gyroResetBtn.textContent = 'CENTER SET';
@@ -35,11 +37,21 @@ window.addEventListener('deviceorientation', (e) => {
             }, 1000);
         }
 
-        // Force bubble to center immediately for feedback
+        // Force bubble to center for next 2 frames for visual feedback
+        forceBubbleCenterFrames = 2;
         gyroBubble.style.transform = `translate(0px, 0px)`;
+        gyroOutput.textContent = `X: 0 | Y: 0`;
         console.log("Gyro Recalibrated:", gyroNeutral);
-        return; // Skip the rest of this frame to ensure it stays centered
+        return;
     }
+
+    if (forceBubbleCenterFrames > 0) {
+        gyroBubble.style.transform = `translate(0px, 0px)`;
+        gyroOutput.textContent = `X: 0 | Y: 0`;
+        forceBubbleCenterFrames--;
+        return;
+    }
+
     if (e.gamma !== null && e.beta !== null) {
         // Subtract neutral values so horizontal = 0,0
         let adjGamma = e.gamma - gyroNeutral.gamma;
