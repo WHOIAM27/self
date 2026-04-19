@@ -4,19 +4,24 @@ let lastSentTime = 0;
 
 // Make horizontal (flat) device the neutral (0,0) position
 let gyroNeutral = { gamma: 0, beta: 0 };
-let gyroCalibrated = false;
 
-function calibrateGyro(e) {
-    if (!gyroCalibrated && e.gamma !== null && e.beta !== null) {
-        gyroNeutral.gamma = e.gamma;
-        gyroNeutral.beta = e.beta;
-        gyroCalibrated = true;
-    }
+function resetGyroCalibration() {
+    // We'll set a flag to grab the next orientation event as neutral
+    // Or just grab it from a global variable if we want immediate response
+    pendingCalibration = true;
 }
+
+let pendingCalibration = false;
 
 window.addEventListener('deviceorientation', (e) => {
     if (currentMode !== "GYROSCOPE" || !isSystemOn) return;
-    if (!gyroCalibrated) calibrateGyro(e);
+
+    if (pendingCalibration && e.gamma !== null && e.beta !== null) {
+        gyroNeutral.gamma = e.gamma;
+        gyroNeutral.beta = e.beta;
+        pendingCalibration = false;
+        console.log("Gyro Recalibrated:", gyroNeutral);
+    }
     if (e.gamma !== null && e.beta !== null) {
         // Subtract neutral values so horizontal = 0,0
         let adjGamma = e.gamma - gyroNeutral.gamma;

@@ -387,6 +387,21 @@ body {
 }
 
 /* 4. Gyroscope */
+.reset-btn {
+    margin-top: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    height: 40px !important;
+    width: auto !important;
+    min-width: 120px;
+    padding: 0 15px;
+}
+
+.reset-btn:active {
+    background: var(--accent-green);
+    color: black;
+}
+
 #gyro-bubble-base {
     width: 150px;
     height: 150px;
