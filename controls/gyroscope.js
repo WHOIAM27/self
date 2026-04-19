@@ -1,14 +1,18 @@
 const gyroBubble = document.getElementById('gyro-bubble');
 const gyroOutput = document.getElementById('gyro-output');
+const gyroResetBtn = document.getElementById('btn-gyro-reset');
 let lastSentTime = 0;
 
 // Make horizontal (flat) device the neutral (0,0) position
 let gyroNeutral = { gamma: 0, beta: 0 };
 
 function resetGyroCalibration() {
-    // We'll set a flag to grab the next orientation event as neutral
-    // Or just grab it from a global variable if we want immediate response
     pendingCalibration = true;
+    if (gyroResetBtn) {
+        gyroResetBtn.style.borderColor = 'var(--accent-green)';
+        gyroResetBtn.style.color = 'var(--accent-green)';
+        gyroResetBtn.textContent = 'CENTERING...';
+    }
 }
 
 let pendingCalibration = false;
@@ -20,7 +24,21 @@ window.addEventListener('deviceorientation', (e) => {
         gyroNeutral.gamma = e.gamma;
         gyroNeutral.beta = e.beta;
         pendingCalibration = false;
+        
+        // Reset button UI after short delay
+        if (gyroResetBtn) {
+            gyroResetBtn.textContent = 'CENTER SET';
+            setTimeout(() => {
+                gyroResetBtn.textContent = 'SET CENTER';
+                gyroResetBtn.style.borderColor = '';
+                gyroResetBtn.style.color = '';
+            }, 1000);
+        }
+
+        // Force bubble to center immediately for feedback
+        gyroBubble.style.transform = `translate(0px, 0px)`;
         console.log("Gyro Recalibrated:", gyroNeutral);
+        return; // Skip the rest of this frame to ensure it stays centered
     }
     if (e.gamma !== null && e.beta !== null) {
         // Subtract neutral values so horizontal = 0,0
