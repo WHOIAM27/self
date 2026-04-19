@@ -1,20 +1,29 @@
-# Project Title
+# Project Controls and Main App
 
-A brief description of your project.
+This project contains a set of JavaScript controls and a main application for interactive input and UI management.
 
-## Features
-- Feature 1
-- Feature 2
-- Feature 3
+## Project Structure
+
+- **controls/**
+  - `arrows.js`: Arrow key controls
+  - `auto.js`: Automation controls
+  - `gyroscope.js`: Gyroscope input
+  - `joystick.js`: Joystick input
+  - `slider.js`: Slider control
+- **main/**
+  - `app.js`: Main application logic
+  - `index.html`: Main HTML file
+  - `network.js`: Networking logic
+  - `style.css`: Stylesheet
 
 ## Getting Started
-Describe how to get a local copy up and running.
+
+1. Open `main/index.html` in your browser to launch the app.
+2. Edit or add controls in the `controls/` directory as needed.
 
 ## Usage
-Instructions and examples for use.
-
-## Contributing
-Explain how others can contribute to your project.
+- The app integrates various input controls for interactive applications.
+- Customize or extend controls by editing the corresponding JS files in `controls/`.
 
 ## License
-Specify the license for your project.
+Add your license information here.
