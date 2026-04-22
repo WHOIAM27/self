@@ -1,4 +1,4 @@
- #include <WiFi.h>
+#include <WiFi.h>
 #include <WebSocketsServer.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -13,10 +13,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 #define RXD2 16 
 #define TXD2 17 
-
-// Your exact Wi-Fi details
-const char* ssid = ".";
-const char* password = "963852741";
 
 // Create a WebSocket server on port 80
 WebSocketsServer webSocket = WebSocketsServer(80);
@@ -36,13 +32,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       int colonIndex = msg.indexOf(':');
       int commaIndex = msg.indexOf(',');
       
-      // Extract the X and Y numbers
       int x = msg.substring(colonIndex + 1, commaIndex).toInt();
       int y = msg.substring(commaIndex + 1).toInt();
       
       char cmd = 'S'; // Default to Stop
       
-      // Translate coordinates to Arduino UNO commands
       if (y > 50) { cmd = 'F'; currentStatus = "Forward"; }
       else if (y < -50) { cmd = 'B'; currentStatus = "Backward"; }
       else if (x > 50) { cmd = 'R'; currentStatus = "Right"; }
@@ -71,19 +65,18 @@ void setup() {
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0, 10);
-  display.println("Connecting WiFi...");
+  display.println("Starting AP Mode...");
   display.display();
 
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) { delay(500); }
-
-  // Start the WebSocket server instead of the standard WebServer
+  // --- START ACCESS POINT (THE ROBOT IS NOW THE ROUTER) ---
+  WiFi.softAP("AeroBalance", "12345678"); 
+  
+  // Start the WebSocket server
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
 }
 
 void loop() {
-  // Keep the WebSocket connection alive and listening
   webSocket.loop(); 
 
   // Read live angle from UNO
@@ -118,8 +111,8 @@ void loop() {
 void updateOLED(int dist) {
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println("AeroBalance Live");
-  display.print("IP:"); display.println(WiFi.localIP());
+  display.println("AeroBalance AP Mode");
+  display.print("IP:"); display.println(WiFi.softAPIP());
   display.drawLine(0, 18, 128, 18, WHITE);
   
   display.setCursor(0, 25);
@@ -129,6 +122,7 @@ void updateOLED(int dist) {
   } else {
     display.print("Dir:"); 
     if (currentStatus == "Backward") display.setTextSize(1);
+    else if (currentStatus == "Forward") display.setTextSize(1);
     display.println(currentStatus);
   }
   
