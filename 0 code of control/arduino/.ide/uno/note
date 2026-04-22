@@ -1,0 +1,33 @@
+#include "Wire.h"
+#include <MPU6050_light.h>
+
+MPU6050 mpu(Wire);
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
+  mpu.begin();
+
+  Serial.println("Place the robot on a perfectly level surface.");
+  Serial.println("Hold it completely still...");
+  delay(3000); // Give yourself time to let go
+  
+  Serial.println("Calculating offsets... do not move.");
+  mpu.calcOffsets(true, true); // This does the math
+  
+  Serial.println("\n--- COPY THESE NUMBERS ---");
+  Serial.print("mpu.setGyroOffsets(");
+  Serial.print(mpu.getGyroXoffset()); Serial.print(", ");
+  Serial.print(mpu.getGyroYoffset()); Serial.print(", ");
+  Serial.print(mpu.getGyroZoffset()); Serial.println(");");
+
+  Serial.print("mpu.setAccOffsets(");
+  Serial.print(mpu.getAccXoffset()); Serial.print(", ");
+  Serial.print(mpu.getAccYoffset()); Serial.print(", ");
+  Serial.print(mpu.getAccZoffset()); Serial.println(");");
+  Serial.println("--------------------------");
+}
+
+void loop() {
+  // Nothing needed here for calibration
+}

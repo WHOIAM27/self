@@ -44,7 +44,15 @@ function connectWifi() {
     let ip = ipInput ? ipInput.value : "192.168.4.1";
     if (!ip) ip = "192.168.4.1";
 
-    websocket = new WebSocket(`ws://${ip}/ws`);
+    // 1. Give immediate visual feedback that you clicked it!
+    const connectButton = document.querySelector('#content-wifi .conn-btn');
+    if (connectButton) {
+        connectButton.textContent = "CONNECTING...";
+        connectButton.style.backgroundColor = "#e67e22"; // Turn orange
+    }
+
+    // 2. Connect directly to port 80 (Crucial for ESP32)
+    websocket = new WebSocket(`ws://${ip}:80/`);
 
     websocket.onopen = () => {
         if (connectStatusBox) {
@@ -52,7 +60,12 @@ function connectWifi() {
             connectStatusBox.style.color = "#2ecc71";
         }
         if (signalFillBar) signalFillBar.style.width = "100%";
-        toggleOverlay();
+
+        if (connectButton) {
+            connectButton.textContent = "CONNECT WI-FI"; // Reset button
+            connectButton.style.backgroundColor = "";
+        }
+        toggleOverlay(); // Close the menu!
     };
 
     websocket.onclose = () => {
@@ -61,6 +74,16 @@ function connectWifi() {
             connectStatusBox.style.color = "white";
         }
         if (signalFillBar) signalFillBar.style.width = "0%";
+
+        // Show an error right on the button if it fails
+        if (connectButton) {
+            connectButton.textContent = "FAILED! TRY AGAIN";
+            connectButton.style.backgroundColor = "#e74c3c"; // Turn red
+            setTimeout(() => {
+                connectButton.textContent = "CONNECT WI-FI";
+                connectButton.style.backgroundColor = "";
+            }, 3000);
+        }
     };
 
     websocket.onerror = (error) => {
