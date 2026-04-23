@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const btnGyro = document.getElementById('btn-gyro'); // The button to turn tilt on/off
+    const btnGyro = document.getElementById('btn-gyro'); 
     let gyroActive = false;
 
     const constrain = (val, min, max) => Math.min(Math.max(val, min), max);
@@ -7,10 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleOrientation = (event) => {
         if (!gyroActive) return;
         
-        let pitch = event.beta;  // Front/Back tilt
-        let roll = event.gamma;  // Left/Right tilt
+        let pitch = event.beta;  
+        let roll = event.gamma;  
 
-        // Map a 30-degree phone tilt to 100% motor speed
         let y = constrain(Math.round((-pitch / 30) * 100), -100, 100);
         let x = constrain(Math.round((roll / 30) * 100), -100, 100);
 
@@ -22,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gyroActive = !gyroActive;
             
             if (gyroActive) {
-                btnGyro.style.backgroundColor = "#2ecc71"; // Turn button green
+                btnGyro.style.backgroundColor = "#2ecc71"; 
                 
                 // Security check for iPhones (iOS 13+)
                 if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -37,14 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     } catch (e) { console.error(e); }
                 } else {
-                    // Android and older devices
                     window.addEventListener('deviceorientation', handleOrientation);
                 }
             } else {
-                // Turn Gyro off
                 btnGyro.style.backgroundColor = "";
                 window.removeEventListener('deviceorientation', handleOrientation);
-                if (typeof sendToESP32 === 'function') sendToESP32(`ARR:0,0`); // Safety stop
+                if (typeof sendToESP32 === 'function') sendToESP32(`ARR:0,0`); 
             }
         });
     }
