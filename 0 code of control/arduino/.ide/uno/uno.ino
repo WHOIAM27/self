@@ -12,10 +12,9 @@ MPU6050 mpu(Wire);
 #define ENB 10
 
 // --- PID TUNING VARIABLES ---
-// Adjust these numbers based on your physical floor tests!
-float Kp = 25.0; // Start here. Increase until it jitters.
-float Ki = 0.5;  // Keep very low. Helps prevent drifting.
-float Kd = 1.2;  // Increase to smooth out the jitter.
+float Kp = 8.0; 
+float Ki = 0.5;  
+float Kd = 0.5;  
 
 float targetAngle = 0.0; 
 float turnOffset = 0.0;
@@ -26,8 +25,7 @@ unsigned long previousTime;
 unsigned long lastDisplayUpdate = 0; 
 
 // --- FRICTION DEADBAND ---
-// Increase this if your motors whine but don't spin at low angles
-int minPWM = 40; 
+int minPWM = 9; 
 
 void setup() {
   Serial.begin(9600); 
@@ -40,9 +38,8 @@ void setup() {
   while(status != 0) { } 
   
   // --- INSTANT BOOT CALIBRATION ---
-  // REPLACE THESE NUMBERS WITH YOUR EXACT CALIBRATION DATA!
- mpu.setGyroOffsets(-3.56, -0.87, -1.25);
-mpu.setAccOffsets(-0.04, -0.01, 0.07);  
+  mpu.setGyroOffsets(-3.56, -0.69, -1.31);
+  mpu.setAccOffsets(0.08, 0.01, -1.94);  
 
   delay(100); 
 }
@@ -52,10 +49,11 @@ void loop() {
   if (Serial.available() > 0) {
     char cmd = Serial.read();
     switch(cmd) {
-      case 'F': targetAngle = 2.0; turnOffset = 0; break; 
-      case 'B': targetAngle = -2.0; turnOffset = 0; break; 
-      case 'L': targetAngle = 0.0; turnOffset = -30; break;
-      case 'R': targetAngle = 0.0; turnOffset = 30; break;  
+      // FIX 1: Cut the driving lean angle and turn speed by exactly 50%
+      case 'F': targetAngle = 0.5; turnOffset = 0; break; 
+      case 'B': targetAngle = -0.5; turnOffset = 0; break; 
+      case 'L': targetAngle = 0.0; turnOffset = -10; break;
+      case 'R': targetAngle = 0.0; turnOffset = 10; break;  
       case 'S': targetAngle = 0.0; turnOffset = 0; break;   
     }
   }
@@ -65,7 +63,7 @@ void loop() {
   unsigned long currentTime = millis();
   float dt = (currentTime - previousTime) / 1000.0; 
   previousTime = currentTime;
-  float currentAngle = mpu.getAngleY(); // Ensure your MPU is mounted so Y is Pitch
+  float currentAngle = mpu.getAngleY(); 
 
   // 3. Send live angle to ESP32 OLED every 100ms
   if (currentTime - lastDisplayUpdate > 100) {
@@ -86,17 +84,16 @@ void loop() {
   if (PID_value > 0) baseSpeed = PID_value + minPWM;
   else if (PID_value < 0) baseSpeed = abs(PID_value) + minPWM;
   
-  // Mix in steering controls for turning
-  int speedLeft = constrain(baseSpeed + turnOffset, 0, 255);
-  int speedRight = constrain(baseSpeed - turnOffset, 0, 255);
+  // FIX 2: Apply a Speed Limit (130 instead of 255 is approx 50% max speed)
+  int speedLeft = constrain(baseSpeed + turnOffset, 0,  90);
+  int speedRight = constrain(baseSpeed - turnOffset, 0, 100);
 
   // 6. Drive the Motors
   if (abs(error) > 30) {
-    // CRASH DETECTION: Shut off motors if it falls over
     analogWrite(ENA, 0); analogWrite(ENB, 0);
     digitalWrite(IN1, LOW); digitalWrite(IN2, LOW);
     digitalWrite(IN3, LOW); digitalWrite(IN4, LOW);
-    I = 0; // Reset integral memory
+    I = 0; 
   } else if (PID_value > 0) {
     // Fall Forward -> Drive Forward
     analogWrite(ENA, speedLeft); analogWrite(ENB, speedRight);
