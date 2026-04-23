@@ -17,3 +17,4 @@ document.addEventListener('DOMContentLoaded', () => {
         slider.addEventListener('touchcancel', snapToZero);
     }
 });
+ 
