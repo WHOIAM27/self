@@ -1,28 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const zone = document.getElementById('joystick-zone'); 
+    const zone = document.getElementById('joystick-zone');
     const knob = document.getElementById('joystick-knob');
     if (!zone || !knob) return;
 
     let active = false;
     let center = { x: 0, y: 0 };
-    let radius = zone.offsetWidth / 2 || 75; 
+    let radius = zone.offsetWidth / 2 || 75; // The max distance the knob can travel
 
     const start = (e) => {
         active = true;
-        if (e.cancelable) e.preventDefault(); // Stop screen scrolling
-
-        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-        // FLOATING JOYSTICK: Set center exactly where finger lands
-        center = { x: clientX, y: clientY };
+        const rect = zone.getBoundingClientRect();
+        // Find the exact center of the HTML joystick pad
+        center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
         move(e);
     };
 
     const move = (e) => {
         if (!active) return;
-        if (e.cancelable) e.preventDefault(); 
-        
+        if (e.cancelable) e.preventDefault(); // Stop screen scrolling
+
         let clientX = e.touches ? e.touches[0].clientX : e.clientX;
         let clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
@@ -36,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dy = (dy / distance) * radius;
         }
 
+        // Move the physical knob graphic
         knob.style.transform = `translate(${dx}px, ${dy}px)`;
 
         // Map movement to -100 to +100 for the ESP32
@@ -47,7 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const stop = (e) => {
         active = false;
+        // Snap back to center
         knob.style.transform = `translate(0px, 0px)`;
+        // Send stop command
         if (typeof sendToESP32 === 'function') sendToESP32(`ARR:0,0`);
     };
 
@@ -56,10 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
     zone.addEventListener('touchmove', move, { passive: false });
     zone.addEventListener('touchend', stop);
     zone.addEventListener('touchcancel', stop);
-    
-    // PC mouse events
+
+    // PC mouse events (for testing)
     zone.addEventListener('mousedown', start);
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', stop);
 });
- 
