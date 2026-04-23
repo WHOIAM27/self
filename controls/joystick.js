@@ -62,3 +62,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', stop);
 });
+ 
