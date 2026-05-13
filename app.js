@@ -11,7 +11,7 @@ const zones = {
     "ARROW BUTTON": document.getElementById('arrow-zone'),
     "STEERING SLIDER": document.getElementById('slider-zone'),
     "GYROSCOPE": document.getElementById('gyro-zone'),
-    "AUTO": document.getElementById('auto-zone')
+    "FOLLOW": document.getElementById('auto-zone')
 };
 
 // Simulate Connection Animation
@@ -36,9 +36,9 @@ function updateDisplay() {
 
         displayText.style.color = "#2ecc71";
 
-        if (currentMode === "AUTO") {
+        if (currentMode === "FOLLOW") {
             displayText.style.display = "none";
-            if (zones["AUTO"]) zones["AUTO"].style.display = "flex";
+            if (zones["FOLLOW"]) zones["FOLLOW"].style.display = "flex";
         } else if (currentMode && zones[currentMode]) {
             displayText.style.display = "none";
             zones[currentMode].style.display = "flex";
@@ -71,9 +71,9 @@ if (btnAuto) {
         if (!isSystemOn) return alert("Turn Balance ON first.");
         btnAuto.classList.toggle('active');
         if (btnAuto.classList.contains('active')) {
-            currentMode = "AUTO";
+            currentMode = "FOLLOW";
             modeButtons.forEach(btn => btn.classList.remove('active'));
-            sendToESP32("MODE:AUTO");
+            sendToESP32("MODE:FOLLOW");
         } else {
             currentMode = null;
         }

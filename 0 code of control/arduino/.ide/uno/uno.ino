@@ -32,8 +32,8 @@ float ypr[3];
 double originalSetpoint = 180.0; 
 double setpoint = originalSetpoint;
 
-double Kp = 25; 
-double Kd = 0.5;  
+double Kp = 20; 
+double Kd = 0;  
 double Ki = 0;  
 
 double input, output;

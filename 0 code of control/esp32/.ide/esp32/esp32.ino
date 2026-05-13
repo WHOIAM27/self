@@ -131,34 +131,64 @@ void loop() {
       systemState = "IDLE";
     }
 
+    // Follow Mode Logic
+    if (currentMode == "FOLLOW") {
+      if (distanceCm < 15) {
+        directionStr = "REV";
+      } else if (distanceCm >= 15 && distanceCm <= 25) {
+        directionStr = "STOP";
+      } else if (distanceCm > 25 && distanceCm < 60) {
+        directionStr = "FWD";
+      } else {
+        directionStr = "IDLE";
+      }
+    }
+
     // 2. Update OLED Display
     display.clearDisplay();
     
+    // --- Layout Update ---
     display.setTextSize(1);
+    
+    // Line 1: Connection Symbol & IP
     display.setCursor(0, 0);
-    display.print("IP: "); 
+    if (webSocket.connectedClients() > 0) {
+      display.print("[<->] "); // Connected symbol
+    } else {
+      display.print("[ x ] "); // Disconnected symbol
+    }
     display.print(currentIP);
     
-    display.setCursor(0, 10);
-    display.print("Mode: "); 
+    // Line 2: Mode
+    display.setCursor(0, 13);
+    display.print("MODE: "); 
     display.print(currentMode);
     
-    display.setCursor(0, 20);
-    display.print("Dir: "); 
+    // Line 3: Direction
+    display.setCursor(0, 26);
+    display.print("DIR : "); 
     display.print(directionStr);
     
-    display.setCursor(0, 30);
-    display.print("Tilt: "); 
+    // Line 4: Tilt Angle
+    display.setCursor(0, 39);
+    display.print("TILT: "); 
     display.print(tiltAngle); 
     
-    display.setCursor(0, 40);
-    display.print("Dist: "); 
-    if (distanceCm == 999) display.print("OUT OF RANGE");
-    else { display.print(distanceCm); display.print(" cm"); }
+    // Line 5: Distance & State
+    display.setCursor(0, 52);
+    display.print("DIST: "); 
+    if (distanceCm == 999) {
+      display.print("MAX | ");
+    } else { 
+      display.print(distanceCm); 
+      display.print("cm | "); 
+    }
     
-    display.setCursor(0, 50);
-    display.print("State: "); 
-    display.print(systemState);
+    if (systemState == "OBSTACLE") {
+      display.print("OBST");
+    } else {
+      display.print("IDLE");
+    }
 
     display.display();
   }
