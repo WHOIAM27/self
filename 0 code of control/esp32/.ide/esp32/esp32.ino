@@ -2,7 +2,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <WiFi.h>
-#include <WebSocketsServer.h> // Make sure you have the WebSockets library installed (by Markus Sattler)
+#include <WebSocketsServer.h> 
 
 // --- OLED Display Settings ---
 #define SCREEN_WIDTH 128
@@ -10,24 +10,24 @@
 #define OLED_RESET    -1
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-// --- Ultrasonic Sensor Pins (ESP32) ---
+// --- Serial & Sensor Pins (ESP32) ---
+#define RXD2 16 // Pin 16 connects to Arduino UNO TX (Pin 1)
 const int trigPin = 5;  
 const int echoPin = 18; 
 
-// Variables for distance calculation
+// Variables for display and logic
 int distanceCm = 0;
-String systemState = "IDLE"; // "IDLE" or "OBSTACLE"
+String systemState = "IDLE"; 
 
 // WiFi & WebSocket Settings
 const char* ssid = "AeroBalance";
-const char* password = ""; // Open network
+const char* password = ""; 
 WebSocketsServer webSocket = WebSocketsServer(80);
 
-// Global State Variables from Website
 String currentIP = "Not Connected";
 String currentMode = "STANDBY";
 String directionStr = "STOP";
-String tiltAngle = "0, 0";
+String tiltAngle = "0.00"; // Default start
 bool isSystemOn = false;
 
 unsigned long lastUpdate = 0;
@@ -35,7 +35,6 @@ unsigned long lastUpdate = 0;
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
-      break;
     case WStype_CONNECTED:
       break;
     case WStype_TEXT:
@@ -60,36 +59,25 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         else if (coords == "-100,0") directionStr = "LEFT";
         else if (coords == "100,0") directionStr = "RIGHT";
         else if (coords == "0,0") directionStr = "STOP";
-        else directionStr = coords; // For joystick intermediate values
+        else directionStr = coords; 
       }
-      else if (msg.startsWith("GYRO:")) {
-        tiltAngle = msg.substring(5);
-        directionStr = "TILT";
-      }
-      else if (msg.startsWith("SLI:")) {
-        String speed = msg.substring(4);
-        if (speed == "0") directionStr = "STOP";
-        else if (speed.toInt() > 0) directionStr = "FWD " + speed + "%";
-        else directionStr = "REV " + String(abs(speed.toInt())) + "%";
-      }
+      // Note: GYRO websocket command removed here to let Arduino serial take priority
       break;
   }
 }
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(115200); // USB Debugging
+  Serial2.begin(115200, SERIAL_8N1, RXD2, 17); // Hardware Serial to UNO
 
-  // Initialize Ultrasonic Pins
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
-  // Initialize OLED
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
     Serial.println(F("SSD1306 allocation failed"));
     for(;;); 
   }
 
-  // Boot Screen
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
@@ -97,11 +85,9 @@ void setup() {
   display.println(F("BOOTING..."));
   display.display();
 
-  // Setup WiFi Access Point
   WiFi.softAP(ssid, password);
   currentIP = WiFi.softAPIP().toString();
 
-  // Start WebSocket Server
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
   
@@ -109,11 +95,20 @@ void setup() {
 }
 
 void loop() {
-  // Handle WebSocket clients
   webSocket.loop();
 
+  // --- Read incoming Tilt Angle from Arduino UNO ---
+  while (Serial2.available()) {
+    String incomingData = Serial2.readStringUntil('\n');
+    incomingData.trim(); // Remove whitespace/newlines
+    
+    if (incomingData.startsWith("T:")) {
+      tiltAngle = incomingData.substring(2); // Extract just the number
+    }
+  }
+
   unsigned long currentMillis = millis();
-  if (currentMillis - lastUpdate > 100) { // Update display and sensor every 100ms
+  if (currentMillis - lastUpdate > 100) { 
     lastUpdate = currentMillis;
 
     // 1. Read Ultrasonic Sensor
@@ -123,14 +118,13 @@ void loop() {
     delayMicroseconds(10);
     digitalWrite(trigPin, LOW);
     
-    long duration = pulseIn(echoPin, HIGH, 30000); // 30ms timeout
+    long duration = pulseIn(echoPin, HIGH, 30000); 
     if (duration == 0) {
-      distanceCm = 999; // Out of range
+      distanceCm = 999; 
     } else {
       distanceCm = duration * 0.034 / 2; 
     }
 
-    // Determine state
     if (distanceCm < 20) {
       systemState = "OBSTACLE";
     } else {
@@ -140,34 +134,28 @@ void loop() {
     // 2. Update OLED Display
     display.clearDisplay();
     
-    // IP Address
     display.setTextSize(1);
     display.setCursor(0, 0);
     display.print("IP: "); 
     display.print(currentIP);
     
-    // Mode
     display.setCursor(0, 10);
     display.print("Mode: "); 
     display.print(currentMode);
     
-    // Direction
     display.setCursor(0, 20);
     display.print("Dir: "); 
     display.print(directionStr);
     
-    // Tilt Angle
     display.setCursor(0, 30);
     display.print("Tilt: "); 
-    display.print(tiltAngle);
+    display.print(tiltAngle); 
     
-    // Distance
     display.setCursor(0, 40);
     display.print("Dist: "); 
     if (distanceCm == 999) display.print("OUT OF RANGE");
     else { display.print(distanceCm); display.print(" cm"); }
     
-    // Idle or Obstacle
     display.setCursor(0, 50);
     display.print("State: "); 
     display.print(systemState);
