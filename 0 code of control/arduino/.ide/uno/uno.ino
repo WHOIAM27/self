@@ -35,7 +35,7 @@ double originalSetpoint = 180.0;
 double setpoint = originalSetpoint;
 
 // START TUNING HERE:
-double Kp = 15; // Set this first (Increase until it pushes back and wobbles)
+double Kp = 18; // Set this first (Increase until it pushes back and wobbles)
 double Kd = 0;  // Set this second (Increase to stop the wobble)
 double Ki = 0;  // Set this LAST (Only add 1 or 2 to fix slow drifting)
 
@@ -46,10 +46,10 @@ PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 // L298N MOTOR DRIVER PINS
 // ==========================================
 int ENA = 9;
-int IN1 = 8;
-int IN2 = 7;
-int IN3 = 6;
-int IN4 = 5;
+int IN1 = 7;
+int IN2 = 8;
+int IN3 = 5;
+int IN4 = 6;
 int ENB = 10;
 
 volatile bool mpuInterrupt = false;     

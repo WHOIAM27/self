@@ -61,6 +61,7 @@ if (btnBalance) {
 
         // Send status to ESP32
         sendToESP32(isSystemOn ? "BAL:ON" : "BAL:OFF");
+        if (currentMode) sendToESP32("MODE:" + currentMode);
         updateDisplay();
     });
 }
@@ -72,6 +73,7 @@ if (btnAuto) {
         if (btnAuto.classList.contains('active')) {
             currentMode = "AUTO";
             modeButtons.forEach(btn => btn.classList.remove('active'));
+            sendToESP32("MODE:AUTO");
         } else {
             currentMode = null;
         }
@@ -87,6 +89,7 @@ modeButtons.forEach(button => {
         button.classList.add('active');
         currentMode = button.getAttribute('data-mode');
         updateDisplay();
+        sendToESP32("MODE:" + currentMode);
     });
 });
 

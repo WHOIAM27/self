@@ -1,134 +1,177 @@
-#include <WiFi.h>
-#include <WebSocketsServer.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <WiFi.h>
+#include <WebSocketsServer.h> // Make sure you have the WebSockets library installed (by Markus Sattler)
 
+// --- OLED Display Settings ---
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+#define OLED_RESET    -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-#define TRIG_PIN 5
-#define ECHO_PIN 18
+// --- Ultrasonic Sensor Pins (ESP32) ---
+const int trigPin = 5;  
+const int echoPin = 18; 
 
-#define RXD2 16 
-#define TXD2 17 
+// Variables for distance calculation
+int distanceCm = 0;
+String systemState = "IDLE"; // "IDLE" or "OBSTACLE"
 
-// Create a WebSocket server on port 80
+// WiFi & WebSocket Settings
+const char* ssid = "AeroBalance";
+const char* password = ""; // Open network
 WebSocketsServer webSocket = WebSocketsServer(80);
 
-unsigned long lastSensorTime = 0;
-String currentStatus = "IDLE";
-String currentAngle = "0.0";
-bool obstacleDetected = false;
+// Global State Variables from Website
+String currentIP = "Not Connected";
+String currentMode = "STANDBY";
+String directionStr = "STOP";
+String tiltAngle = "0, 0";
+bool isSystemOn = false;
 
-// --- WEBSOCKET DATA HANDLER ---
+unsigned long lastUpdate = 0;
+
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
-  if (type == WStype_TEXT) {
-    String msg = String((char*)payload);
-    
-    // Check if the message is from the ARROW buttons (e.g., "ARR:0,100")
-    if (msg.startsWith("ARR:")) {
-      int colonIndex = msg.indexOf(':');
-      int commaIndex = msg.indexOf(',');
+  switch(type) {
+    case WStype_DISCONNECTED:
+      break;
+    case WStype_CONNECTED:
+      break;
+    case WStype_TEXT:
+      String msg = String((char*)payload);
       
-      int x = msg.substring(colonIndex + 1, commaIndex).toInt();
-      int y = msg.substring(commaIndex + 1).toInt();
-      
-      char cmd = 'S'; // Default to Stop
-      
-      if (y > 50) { cmd = 'F'; currentStatus = "Forward"; }
-      else if (y < -50) { cmd = 'B'; currentStatus = "Backward"; }
-      else if (x > 50) { cmd = 'R'; currentStatus = "Right"; }
-      else if (x < -50) { cmd = 'L'; currentStatus = "Left"; }
-      else { cmd = 'S'; currentStatus = "Stop"; }
-
-      // Send the translated letter to the Arduino UNO
-      if (!obstacleDetected || cmd == 'B' || cmd == 'S') {
-        Serial2.print(cmd); 
+      if (msg.startsWith("BAL:")) {
+        if (msg.substring(4) == "ON") {
+          isSystemOn = true;
+        } else {
+          isSystemOn = false;
+          currentMode = "STANDBY";
+          directionStr = "STOP";
+        }
       }
-    }
+      else if (msg.startsWith("MODE:")) {
+        currentMode = msg.substring(5);
+      }
+      else if (msg.startsWith("ARR:")) {
+        String coords = msg.substring(4);
+        if (coords == "0,100") directionStr = "FWD";
+        else if (coords == "0,-100") directionStr = "REV";
+        else if (coords == "-100,0") directionStr = "LEFT";
+        else if (coords == "100,0") directionStr = "RIGHT";
+        else if (coords == "0,0") directionStr = "STOP";
+        else directionStr = coords; // For joystick intermediate values
+      }
+      else if (msg.startsWith("GYRO:")) {
+        tiltAngle = msg.substring(5);
+        directionStr = "TILT";
+      }
+      else if (msg.startsWith("SLI:")) {
+        String speed = msg.substring(4);
+        if (speed == "0") directionStr = "STOP";
+        else if (speed.toInt() > 0) directionStr = "FWD " + speed + "%";
+        else directionStr = "REV " + String(abs(speed.toInt())) + "%";
+      }
+      break;
   }
 }
 
 void setup() {
-  Serial.begin(115200); 
-  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2); 
-  Serial2.setTimeout(10); 
-  
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
+  Serial.begin(115200);
 
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { for(;;); }
-  
+  // Initialize Ultrasonic Pins
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  // Initialize OLED
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); 
+  }
+
+  // Boot Screen
   display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0, 10);
-  display.println("Starting AP Mode...");
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(10, 20);
+  display.println(F("BOOTING..."));
   display.display();
 
-  // --- START ACCESS POINT (THE ROBOT IS NOW THE ROUTER) ---
-  WiFi.softAP("AeroBalance", "12345678"); 
-  
-  // Start the WebSocket server
+  // Setup WiFi Access Point
+  WiFi.softAP(ssid, password);
+  currentIP = WiFi.softAPIP().toString();
+
+  // Start WebSocket Server
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
+  
+  delay(1500); 
 }
 
 void loop() {
-  webSocket.loop(); 
+  // Handle WebSocket clients
+  webSocket.loop();
 
-  // Read live angle from UNO
-  if (Serial2.available()) {
-    String incoming = Serial2.readStringUntil('\n');
-    incoming.trim(); 
-    if (incoming.length() > 0) currentAngle = incoming; 
-  }
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastUpdate > 100) { // Update display and sensor every 100ms
+    lastUpdate = currentMillis;
 
-  // Ultrasonic Sensor & OLED Update
-  if (millis() - lastSensorTime > 100) {
-    long duration, distance;
-    digitalWrite(TRIG_PIN, LOW); delayMicroseconds(2);
-    digitalWrite(TRIG_PIN, HIGH); delayMicroseconds(10);
-    digitalWrite(TRIG_PIN, LOW);
+    // 1. Read Ultrasonic Sensor
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
     
-    duration = pulseIn(ECHO_PIN, HIGH, 30000); 
-    distance = (duration / 2) / 29.1;
-
-    if (distance > 0 && distance < 15) {
-      Serial2.print('S'); 
-      obstacleDetected = true;
+    long duration = pulseIn(echoPin, HIGH, 30000); // 30ms timeout
+    if (duration == 0) {
+      distanceCm = 999; // Out of range
     } else {
-      obstacleDetected = false; 
+      distanceCm = duration * 0.034 / 2; 
     }
 
-    updateOLED(distance);
-    lastSensorTime = millis();
-  }
-}
+    // Determine state
+    if (distanceCm < 20) {
+      systemState = "OBSTACLE";
+    } else {
+      systemState = "IDLE";
+    }
 
-void updateOLED(int dist) {
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.println("AeroBalance AP Mode");
-  display.print("IP:"); display.println(WiFi.softAPIP());
-  display.drawLine(0, 18, 128, 18, WHITE);
-  
-  display.setCursor(0, 25);
-  display.setTextSize(2);
-  if (obstacleDetected) {
-    display.println("OBSTACLE!");
-  } else {
-    display.print("Dir:"); 
-    if (currentStatus == "Backward") display.setTextSize(1);
-    else if (currentStatus == "Forward") display.setTextSize(1);
-    display.println(currentStatus);
+    // 2. Update OLED Display
+    display.clearDisplay();
+    
+    // IP Address
+    display.setTextSize(1);
+    display.setCursor(0, 0);
+    display.print("IP: "); 
+    display.print(currentIP);
+    
+    // Mode
+    display.setCursor(0, 10);
+    display.print("Mode: "); 
+    display.print(currentMode);
+    
+    // Direction
+    display.setCursor(0, 20);
+    display.print("Dir: "); 
+    display.print(directionStr);
+    
+    // Tilt Angle
+    display.setCursor(0, 30);
+    display.print("Tilt: "); 
+    display.print(tiltAngle);
+    
+    // Distance
+    display.setCursor(0, 40);
+    display.print("Dist: "); 
+    if (distanceCm == 999) display.print("OUT OF RANGE");
+    else { display.print(distanceCm); display.print(" cm"); }
+    
+    // Idle or Obstacle
+    display.setCursor(0, 50);
+    display.print("State: "); 
+    display.print(systemState);
+
+    display.display();
   }
-  
-  display.setTextSize(1);
-  display.setCursor(0, 50);
-  display.print("Dst:"); display.print(dist); display.print("cm ");
-  display.print("Ang:"); display.print(currentAngle); display.print((char)247);
-  display.display();
 }
