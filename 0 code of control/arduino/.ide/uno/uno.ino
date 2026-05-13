@@ -39,6 +39,8 @@ double Ki = 0;
 double input, output;
 PID pid(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 
+double turnOffset = 0; // Added for left/right turning
+
 // ==========================================
 // L298N MOTOR DRIVER PINS
 // ==========================================
@@ -98,6 +100,27 @@ void setup() {
 
 void loop() {
     if (!dmpReady) return;
+    
+    // Read commands from ESP32
+    static String cmd = "";
+    while (Serial.available()) {
+        char c = Serial.read();
+        if (c == '\n') {
+            cmd.trim();
+            if (cmd.startsWith("CMD:")) {
+                int commaIdx = cmd.indexOf(',');
+                if (commaIdx > 0) {
+                    float pitchOffset = cmd.substring(4, commaIdx).toFloat();
+                    turnOffset = cmd.substring(commaIdx + 1).toFloat();
+                    setpoint = originalSetpoint + pitchOffset;
+                }
+            }
+            cmd = "";
+        } else {
+            cmd += c;
+        }
+    }
+
     fifoCount = mpu.getFIFOCount();
     
     if (fifoCount < packetSize) {
@@ -140,13 +163,17 @@ void loop() {
 void Forward() {
     digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);
     digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);
-    analogWrite(ENA, output); analogWrite(ENB, output);
+    double outL = constrain(output + turnOffset, 0, 255);
+    double outR = constrain(output - turnOffset, 0, 255);
+    analogWrite(ENA, outL); analogWrite(ENB, outR);
 }
 
 void Reverse() {
     digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH);
     digitalWrite(IN3, LOW); digitalWrite(IN4, HIGH);
-    analogWrite(ENA, output * -1); analogWrite(ENB, output * -1);
+    double outL = constrain((output * -1) + turnOffset, 0, 255);
+    double outR = constrain((output * -1) - turnOffset, 0, 255);
+    analogWrite(ENA, outL); analogWrite(ENB, outR);
 }
 
 void Stop() {

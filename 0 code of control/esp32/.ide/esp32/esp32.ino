@@ -30,6 +30,10 @@ String directionStr = "STOP";
 String tiltAngle = "0.00"; // Default start
 bool isSystemOn = false;
 
+// Movement Offsets
+float pitchOffset = 0.0;
+int turnOffsetVal = 0;
+
 unsigned long lastUpdate = 0;
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
@@ -53,15 +57,33 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         currentMode = msg.substring(5);
       }
       else if (msg.startsWith("ARR:")) {
-        String coords = msg.substring(4);
-        if (coords == "0,100") directionStr = "FWD";
-        else if (coords == "0,-100") directionStr = "REV";
-        else if (coords == "-100,0") directionStr = "LEFT";
-        else if (coords == "100,0") directionStr = "RIGHT";
-        else if (coords == "0,0") directionStr = "STOP";
-        else directionStr = coords; 
+        int commaIdx = msg.indexOf(',');
+        if (commaIdx > 0) {
+          int x = msg.substring(4, commaIdx).toInt();
+          int y = msg.substring(commaIdx + 1).toInt();
+          
+          pitchOffset = y * (-5.0 / 100.0); // -5 deg max lean
+          turnOffsetVal = x * (60.0 / 100.0); // 60 max PWM offset
+
+          // Update OLED String based on dominant axis
+          if (abs(y) > abs(x)) {
+            directionStr = (y > 0) ? "FWD" : "REV";
+          } else if (abs(x) > 0) {
+            directionStr = (x > 0) ? "RIGHT" : "LEFT";
+          } else {
+            directionStr = "STOP";
+          }
+        }
       }
-      // Note: GYRO websocket command removed here to let Arduino serial take priority
+      else if (msg.startsWith("SLI:")) {
+        int speed = msg.substring(4).toInt();
+        pitchOffset = speed * (-5.0 / 100.0);
+        turnOffsetVal = 0;
+        
+        if (speed == 0) directionStr = "STOP";
+        else if (speed > 0) directionStr = "FWD " + String(speed) + "%";
+        else directionStr = "REV " + String(abs(speed)) + "%";
+      }
       break;
   }
 }
@@ -133,16 +155,32 @@ void loop() {
 
     // Follow Mode Logic
     if (currentMode == "FOLLOW") {
+      turnOffsetVal = 0;
       if (distanceCm < 15) {
         directionStr = "REV";
+        pitchOffset = 5.0; // Lean back
       } else if (distanceCm >= 15 && distanceCm <= 25) {
         directionStr = "STOP";
+        pitchOffset = 0.0;
       } else if (distanceCm > 25 && distanceCm < 60) {
         directionStr = "FWD";
+        pitchOffset = -4.0; // Lean forward
       } else {
         directionStr = "IDLE";
+        pitchOffset = 0.0;
       }
     }
+
+    if (!isSystemOn) {
+      pitchOffset = 0.0;
+      turnOffsetVal = 0;
+    }
+
+    // Send precise movement offset command to Arduino UNO
+    Serial2.print("CMD:");
+    Serial2.print(pitchOffset);
+    Serial2.print(",");
+    Serial2.println(turnOffsetVal);
 
     // 2. Update OLED Display
     display.clearDisplay();
