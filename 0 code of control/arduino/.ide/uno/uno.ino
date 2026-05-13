@@ -134,10 +134,12 @@ void loop() {
         }
         
         if (input > 135 && input < 225 && input != 0.00) { 
-            if (output > 0) {
+            if (output > 0 || (output == 0 && turnOffset != 0)) {
                 Forward(); 
             } else if (output < 0) {
                 Reverse(); 
+            } else {
+                Stop();
             }
         } else {
             Stop(); 

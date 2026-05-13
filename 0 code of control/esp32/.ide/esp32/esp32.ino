@@ -62,7 +62,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           int x = msg.substring(4, commaIdx).toInt();
           int y = msg.substring(commaIdx + 1).toInt();
           
-          pitchOffset = y * (-5.0 / 100.0); // -5 deg max lean
+          pitchOffset = y * (5.0 / 100.0); // +5 deg max lean
           turnOffsetVal = x * (60.0 / 100.0); // 60 max PWM offset
 
           // Update OLED String based on dominant axis
@@ -77,12 +77,22 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       }
       else if (msg.startsWith("SLI:")) {
         int speed = msg.substring(4).toInt();
-        pitchOffset = speed * (-5.0 / 100.0);
+        pitchOffset = speed * (5.0 / 100.0);
         turnOffsetVal = 0;
         
         if (speed == 0) directionStr = "STOP";
         else if (speed > 0) directionStr = "FWD " + String(speed) + "%";
         else directionStr = "REV " + String(abs(speed)) + "%";
+      }
+      else if (msg.startsWith("GYRO:")) {
+        int commaIdx = msg.indexOf(',');
+        if (commaIdx > 0) {
+          int x = msg.substring(5, commaIdx).toInt();
+          int y = msg.substring(commaIdx + 1).toInt();
+          pitchOffset = y * (5.0 / 100.0); 
+          turnOffsetVal = x * (60.0 / 100.0); 
+          directionStr = "TILT";
+        }
       }
       break;
   }
@@ -156,15 +166,15 @@ void loop() {
     // Follow Mode Logic
     if (currentMode == "FOLLOW") {
       turnOffsetVal = 0;
-      if (distanceCm < 15) {
+      if (distanceCm > 0 && distanceCm <= 10) { // Reverse (1-10cm)
         directionStr = "REV";
-        pitchOffset = 5.0; // Lean back
-      } else if (distanceCm >= 15 && distanceCm <= 25) {
+        pitchOffset = -5.0; // Lean back
+      } else if (distanceCm > 10 && distanceCm <= 15) { // Still (10-15cm)
         directionStr = "STOP";
         pitchOffset = 0.0;
-      } else if (distanceCm > 25 && distanceCm < 60) {
+      } else if (distanceCm > 15 && distanceCm < 60) { // Forward (after 15cm)
         directionStr = "FWD";
-        pitchOffset = -4.0; // Lean forward
+        pitchOffset = 4.0; // Lean forward
       } else {
         directionStr = "IDLE";
         pitchOffset = 0.0;
