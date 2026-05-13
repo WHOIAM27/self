@@ -62,8 +62,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           int x = msg.substring(4, commaIdx).toInt();
           int y = msg.substring(commaIdx + 1).toInt();
           
-          pitchOffset = y * (5.0 / 100.0); // +5 deg max lean
-          turnOffsetVal = x * (60.0 / 100.0); // 60 max PWM offset
+          pitchOffset = y * (1.5 / 100.0); // Reduced to 1.5 deg max lean so it doesn't fall
+          turnOffsetVal = x * (30.0 / 100.0); // Reduced turn speed
 
           // Update OLED String based on dominant axis
           if (abs(y) > abs(x)) {
@@ -77,7 +77,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       }
       else if (msg.startsWith("SLI:")) {
         int speed = msg.substring(4).toInt();
-        pitchOffset = speed * (5.0 / 100.0);
+        pitchOffset = speed * (1.5 / 100.0);
         turnOffsetVal = 0;
         
         if (speed == 0) directionStr = "STOP";
@@ -89,8 +89,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         if (commaIdx > 0) {
           int x = msg.substring(5, commaIdx).toInt();
           int y = msg.substring(commaIdx + 1).toInt();
-          pitchOffset = y * (5.0 / 100.0); 
-          turnOffsetVal = x * (60.0 / 100.0); 
+          pitchOffset = y * (1.5 / 100.0); 
+          turnOffsetVal = x * (30.0 / 100.0); 
           directionStr = "TILT";
         }
       }
@@ -166,15 +166,12 @@ void loop() {
     // Follow Mode Logic
     if (currentMode == "FOLLOW") {
       turnOffsetVal = 0;
-      if (distanceCm > 0 && distanceCm <= 10) { // Reverse (1-10cm)
-        directionStr = "REV";
-        pitchOffset = -5.0; // Lean back
-      } else if (distanceCm > 10 && distanceCm <= 15) { // Still (10-15cm)
+      if (distanceCm <= 15) { // Stop if close (No reverse)
         directionStr = "STOP";
         pitchOffset = 0.0;
-      } else if (distanceCm > 15 && distanceCm < 60) { // Forward (after 15cm)
+      } else if (distanceCm > 15 && distanceCm < 60) { // Forward if far
         directionStr = "FWD";
-        pitchOffset = 4.0; // Lean forward
+        pitchOffset = 1.5; // Lean forward gently
       } else {
         directionStr = "IDLE";
         pitchOffset = 0.0;
@@ -196,47 +193,49 @@ void loop() {
     display.clearDisplay();
     
     // --- Layout Update ---
+    // Title Bar
+    display.fillRect(0, 0, 128, 12, SSD1306_WHITE);
+    display.setTextColor(SSD1306_BLACK);
     display.setTextSize(1);
-    
-    // Line 1: Connection Symbol & IP
-    display.setCursor(0, 0);
+    display.setCursor(2, 2);
     if (webSocket.connectedClients() > 0) {
-      display.print("[<->] "); // Connected symbol
+      display.print("[<->] "); 
     } else {
-      display.print("[ x ] "); // Disconnected symbol
+      display.print("[ x ] "); 
     }
     display.print(currentIP);
+
+    // Main Content
+    display.setTextColor(SSD1306_WHITE);
     
-    // Line 2: Mode
-    display.setCursor(0, 13);
-    display.print("MODE: "); 
+    // Mode Box
+    display.setCursor(0, 16);
+    display.print("MD:"); 
     display.print(currentMode);
     
-    // Line 3: Direction
-    display.setCursor(0, 26);
-    display.print("DIR : "); 
+    // Direction & State
+    display.setCursor(0, 28);
+    display.print("DR:"); 
     display.print(directionStr);
-    
-    // Line 4: Tilt Angle
-    display.setCursor(0, 39);
-    display.print("TILT: "); 
-    display.print(tiltAngle); 
-    
-    // Line 5: Distance & State
-    display.setCursor(0, 52);
-    display.print("DIST: "); 
+    display.print(" | ");
+    if (systemState == "OBSTACLE") display.print("OBS!");
+    else display.print("OK");
+
+    // Distance
+    display.setCursor(0, 40);
+    display.print("DST:"); 
     if (distanceCm == 999) {
-      display.print("MAX | ");
+      display.print("MAX");
     } else { 
       display.print(distanceCm); 
-      display.print("cm | "); 
+      display.print("cm"); 
     }
     
-    if (systemState == "OBSTACLE") {
-      display.print("OBST");
-    } else {
-      display.print("IDLE");
-    }
+    // Bottom line (Tilt)
+    display.drawLine(0, 52, 128, 52, SSD1306_WHITE);
+    display.setCursor(0, 55);
+    display.print("TILT: "); 
+    display.print(tiltAngle); 
 
     display.display();
   }

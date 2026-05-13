@@ -32,7 +32,7 @@ float ypr[3];
 double originalSetpoint = 180.0; 
 double setpoint = originalSetpoint;
 
-double Kp = 20; 
+double Kp = 15; 
 double Kd = 0;  
 double Ki = 0;  
 
